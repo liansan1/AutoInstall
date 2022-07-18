@@ -1,0 +1,29 @@
+#! bin/sh
+
+function mysqlInstall()
+{
+	mkdir -p /usr/local/mysql
+	cp ./mysql-5.7.12-1.el6.x86_64.rpm-bundle.tar /usr/local/mysql
+	cd /usr/local/mysql/
+	tar -xf mysql-5.7.12-1.el6.x86_64.rpm-bundle.tar
+	rpm -ivh mysql-community-common-5.7.12-1.el6.x86_64.rpm --force --nodeps
+	rpm -ivh mysql-community-libs-5.7.12-1.el6.x86_64.rpm   --force --nodeps
+	rpm -ivh mysql-community-client-5.7.12-1.el6.x86_64.rpm --force --nodeps
+	rpm -ivh mysql-community-server-5.7.12-1.el6.x86_64.rpm --force --nodeps
+	rpm -ivh mysql-community-devel-5.7.12-1.el6.x86_64.rpm --force --nodeps
+}
+
+systemctl start mysqld.service
+
+temp=`grep "temporary password" /var/log/mysqld.log`
+
+password=${temp:0-12}
+
+sed -i '$a skip-grant-tables' /etc/my.cnf
+
+mysql -uroot -p$password -e "set password for 'root'@'localhost'='AutoTest_001'"
+
+mysql -uroot -p$password -e "create database auto"
+
+mysql -uroot -p$password -e "source \home\iplature\iPlature\script\iPlature_Setup_MySQL.sql"
+
